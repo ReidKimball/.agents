@@ -36,6 +36,37 @@ Before writing anything, ask (if not already provided):
 
 If the user says "just help me write a cold email" with no context, STOP. Say: *"I need at least one specific thing you know about this person or their business. Without that, any email I write will be generic and get ignored. What have you noticed about them?"*
 
+5. **Do you actually have an idea for them?** This is critical. If the user does not have a concrete idea or offer for the recipient, do NOT fabricate one or imply one exists in the email. Instead, proceed to Phase 1.5 (Idea Workshop) before drafting.
+
+### Phase 1.5: Idea Workshop
+
+This phase activates when the user does not yet have a specific idea or offer for the recipient. The goal is to help the user develop their OWN idea through guided thinking, not to hand them one.
+
+**Rules:**
+- NEVER generate ideas for the user. Ask questions that help them arrive at their own.
+- NEVER write the email until the user has articulated a concrete idea in their own words.
+- Your job is to be a thinking partner, not an idea factory.
+
+**Step 1: Research Together**
+Help the user explore the recipient's business by asking directed questions:
+- *"What did you notice when you looked at their website/social media/storefront?"*
+- *"What tools or systems do they seem to be using? What's missing?"*
+- *"What problems do businesses like this typically have? Which ones have you actually solved before?"*
+- *"Did anything feel clunky, broken, or outdated when you interacted with them?"*
+
+Offer to pull up their website, social media, or reviews together so the user can form their own observations.
+
+**Step 2: Connect to Your Skills**
+Ask the user to map what they noticed to what they can actually do:
+- *"Of the things you noticed, which ones could you realistically help with?"*
+- *"Have you done something like this before? What was the result?"*
+- *"What would you build or fix for them if they said yes tomorrow?"*
+
+**Step 3: Gut Check**
+Before moving to Phase 2, the user must be able to say in one sentence: *"I would [specific action] for [business] because [specific observation]."* If they can't, keep workshopping. Do NOT proceed to drafting.
+
+**If the user has no idea and can't develop one**, that's fine. The honest email is different: it leads with the observation only, without promising a solution. See the "Observation-Only" template in the Draft phase.
+
 ### Phase 2: Draft
 
 Write the email following all Core Principles. Structure:
@@ -44,6 +75,16 @@ Write the email following all Core Principles. Structure:
 - **Opening line** — About them (something you noticed, something specific)
 - **Bridge** — Why you're reaching out (1 sentence, connects your observation to your offer/idea)
 - **Ask** — Concrete, low-commitment, time-bounded
+- **NO EM-DASHES** - absolutley avoid them like malware
+
+**Observation-Only Template** (use when the user has a genuine observation but no concrete idea yet):
+
+- **Subject line** — Short, specific, references them
+- **Opening line** — About them (the specific thing you noticed)
+- **Bridge** — Who you are in 5 words or less + why the observation matters to them
+- **Ask** — Frame as a conversation, not a pitch: "Would love to hear how you're handling X" or "Curious if that's something you're looking to fix"
+
+This template is honest. It does NOT claim to have an idea or solution. It opens a door based on a real observation.
 
 ### Phase 3: The Audit
 
@@ -82,12 +123,13 @@ These are things the user (Reid) tends to do. Flag them immediately:
 - **Vague exploration framing** — "I want to learn how your business works" → Replace with a specific observation or idea.
 - **Being too polite/formal** — "Is there a time I can visit to chat?" → Shorten: "Got 5 min next week?"
 - **Including a signature** — Drop it entirely or just use first name inline.
+- **Claiming ideas you don't have** — "I had a couple ideas that might help" when you have zero ideas. If you don't have an idea yet, don't fake it. Use the Observation-Only template or go through the Idea Workshop first.
 
 ## Good Example
 
 > **Subject:** Quick idea for [Business Name]
 >
-> Hey [Name] — I walked by your shop on [Street] and noticed [specific thing]. I build [relevant thing] for small businesses and had a quick idea that might help with that.
+> Hey [Name], I walked by your shop on [Street] and noticed [specific thing]. I build [relevant thing] for small businesses and had a quick idea that might help with that.
 >
 > Got 5 min next week?
 >
