@@ -1,0 +1,8 @@
+interface:
+  display_name: "Manual GA4 Analyst"
+  short_description: "Guide GA4 exports and plain-English analysis."
+  default_prompt: "Use $manual-ga4-reporting-analyst to help me pull the right GA4 export and analyze one reporting question."
+
+policy:
+  allow_implicit_invocation: true
+
