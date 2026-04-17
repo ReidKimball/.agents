@@ -1,6 +1,6 @@
 ---
 name: manual-ga4-reporting-analyst
-description: Helps users manually obtain the right GA4 export and analyze it in plain English for one of five common reporting questions: monthly traffic, acquisition channels, top traffic pages, page engagement, or meaningful actions. Use this when a user wants help reading GA4, exporting the right report, interpreting CSV data, or turning GA4 exports into consistent Markdown summaries without API access.
+description: "Helps users manually obtain the right GA4 export and analyze it in plain English for one of five common reporting questions: monthly traffic, acquisition channels, top traffic pages, page engagement, or meaningful actions. Use this when a user wants help reading GA4, exporting the right report, interpreting CSV data, or turning GA4 exports into consistent Markdown summaries without API access."
 ---
 
 # Manual GA4 Reporting Analyst
