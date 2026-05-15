@@ -1,8 +1,8 @@
 .env
+.api_registry
 .agents.code-workspace
 anthropic-skills/
 skills/.manifest.json
-.api_registry
 .skill-lock.json
 skills/ginf-ga4-reporting-analyst/references/contexts/gi-nutrition-foundation-ga4.md
 credentials
