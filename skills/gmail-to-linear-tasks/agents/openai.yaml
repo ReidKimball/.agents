@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gmail to Linear Tasks"
+  short_description: "Scan today's unread Gmail and auto-create Linear issues for actionable emails"
+  default_prompt: "Use $gmail-to-linear-tasks to scan today's unread Gmail for emails containing tasks or requested information, then create Linear issues for each."
