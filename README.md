@@ -1,6 +1,6 @@
 # .agents
 
-A collection of AI agent skills designed around one principle: **the agent should either make me think harder or do real work — never just summarize what I already know.**
+A collection of AI agent skills designed around one principle: **the agent should either make me think harder or do real work I don't normally do.**
 
 ## Design Philosophy
 
@@ -12,12 +12,8 @@ These are Socratic coaches and mentors. They don't write the answer for me — t
 
 Examples:
 
-- **critical-thought-partner** — stress-tests ideas by finding weak assumptions and logical fallacies. No unearned praise.
-- **linkedin-voice-coach** — helps me find topics and excavate deeper insights for posts, but never writes the post for me.
-- **professional-summary-mentor** — guides me through writing a targeted resume summary. Coaches, doesn't ghostwrite.
-- **pm-competency-coach** — teaches Product Management through structured curriculum and Socratic coaching.
-- **first-principles-thinker** — breaks down complex problems by questioning every assumption until you reach ground truth.
 - **engineering-tutor** — teaches programming fundamentals while preventing passive AI reliance.
+- **api-design** - guides me through designing RESTful and GraphQL APIs following industry best practices.
 
 The pattern: I do the thinking. The skill makes sure I'm thinking well.
 
@@ -29,9 +25,6 @@ Examples:
 
 - **ga4-reporting-analyst** — connects to the Google Analytics 4 Data API, queries traffic data, and delivers plain-English analysis with actionable recommendations. Self-bootstrapping: creates its own Python venv on first run.
 - **gmail-to-linear-tasks** — reads Gmail, parses actionable emails, and creates structured issues in Linear. End-to-end: inbox to issue tracker with no manual copy-paste.
-- **gmail-reply-soon-triage** — processes today's unread inbox and labels emails where someone is waiting for a response.
-- **sanity-blog-publisher** — drafts, formats, and publishes blog posts directly to a Sanity CMS.
-- **linkedin-manager** — drafts and publishes LinkedIn posts natively from local Markdown files.
 
 The pattern: the skill does the tedious, repeatable work so I can focus on decisions.
 
