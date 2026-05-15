@@ -1,0 +1,7 @@
+interface:
+  display_name: "GA4 Reporting Analyst"
+  short_description: "Query GA4 via API and deliver plain-English analysis."
+  default_prompt: "Use $ga4-reporting-analyst to help me query GA4 data and analyze one reporting question."
+
+policy:
+  allow_implicit_invocation: true
