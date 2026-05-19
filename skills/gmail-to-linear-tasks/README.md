@@ -16,10 +16,11 @@ The skill is intentionally narrow: it reads email, creates issues, and applies a
 
 ## How It Works
 
-- Uses the `gws` CLI to read Gmail (authenticated via Google Workspace)
-- Python helper scripts handle email parsing, base64 decoding, and Linear GraphQL calls
-- All credentials loaded from `~/.agents/.env` at runtime — nothing hardcoded in scripts
-- The agent classifies each email using criteria defined in `SKILL.md` (task requests, info/links provided, etc.)
+- **Preflight Health Checks:** A startup script validates environment dependencies, Python libraries, `~/.agents/.env` keys, Node executables, and Linear API access before any email processing begins.
+- **Bypassed Shell Interpreters:** Executes the Google Workspace CLI dynamically via Python's list-based subprocesses (`gws_call.py`). This prevents command argument quote-escaping and shell authentication errors.
+- **Safe UTF-8 Encoding:** Configures standard console input and output streams to force UTF-8 on Windows, avoiding terminal decoding/encoding crashes on emojis or non-ASCII characters in email content.
+- **Linear Issue Creation:** Uses GraphQL API calls to resolve teams and create clean markdown descriptions with links back to the source Gmail threads.
+- **Gmail Label Filtering:** Applies the `Linear Issue Created` label to prevent duplicate processing in future runs.
 
 ## Portability
 
@@ -34,10 +35,10 @@ It is **not** designed to work out of the box on another machine. However, the a
 
 ## Prerequisites
 
-- `gws` CLI on `$PATH` and authenticated (`gws auth login`)
+- `gws` CLI installed and authenticated (`gws auth login`)
 - Google Workspace Skills documentation: https://github.com/googleworkspace/cli/blob/main/docs/skills.md
-- `LINEAR_API_KEY` environment variable set in `~/.agents/.env`
-- Python 3.10+ with `requests` and `python-dotenv`
+- `LINEAR_API_KEY` set in `~/.agents/.env`
+- Python 3.10+ with `requests` and `python-dotenv` packages installed
 
 ## Folder Structure
 
@@ -50,6 +51,8 @@ gmail-to-linear-tasks/
 ├── gotchas/
 │   └── GOTCHAS.md                  # Known issues captured during execution
 └── scripts/
+    ├── preflight.py                # Verify environment, credentials, and CLI status
+    ├── gws_call.py                 # Execute Gmail commands via list-based subprocess
     ├── parse_email.py              # Parse Gmail JSON → headers + decoded body
     ├── get_linear_team.py          # Query Linear for team UUID by key
     └── create_linear_issue.py      # Create Linear issue via GraphQL
@@ -57,9 +60,11 @@ gmail-to-linear-tasks/
 
 ## Design Decisions
 
-- **Helper scripts over inline code.** PowerShell mangles GraphQL `$input` variables. Python scripts avoid shell escaping nightmares entirely.
+- **Helper scripts over inline code.** Windows PowerShell and CMD mangle quotes and JSON parameters. Using python lists bypasses shell interpreters entirely.
+- **Dynamic executable resolution.** Script dynamically checks standard `APPDATA` paths and environment settings to find the npm `gws` runner.
+- **UTF-8 Stream Forcing.** Standardizes stream boundaries across all helper scripts to prevent character encoding crashes.
 - **Narrow scope.** Read + create + label. No replies, no archiving, no side effects beyond what's explicitly documented.
-- **Self-improving.** The `gotchas/GOTCHAS.md` file captures errors and failure patterns during execution, creating a feedback loop that improves the skill over time.
+- **Self-improving.** A mandatory **Step 10** in `SKILL.md` requires agents to record execution errors in `gotchas/GOTCHAS.md` before generating the final report.
 - **Credential separation.** Secrets live in `~/.agents/.env`, not in the skill folder.
 
 ## License

@@ -24,6 +24,11 @@ import requests
 from pathlib import Path
 from dotenv import load_dotenv
 
+# Ensure UTF-8 output on Windows
+if sys.platform.startswith('win'):
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
 
 def main():
     parser = argparse.ArgumentParser(description="Create a Linear issue")

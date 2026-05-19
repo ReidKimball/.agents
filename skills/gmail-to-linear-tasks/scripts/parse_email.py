@@ -19,6 +19,11 @@ import sys
 import json
 import base64
 
+# Ensure UTF-8 output on Windows
+if sys.platform.startswith('win'):
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
 
 def extract_text(payload):
     """Recursively extract plain text body from Gmail payload, decoding base64."""

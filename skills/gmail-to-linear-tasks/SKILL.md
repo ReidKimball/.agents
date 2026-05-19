@@ -20,56 +20,67 @@ Use `gws schema ...` if a command shape is uncertain.
 
 ## Prerequisites
 
-- `gws` CLI on `$PATH` and authenticated (`gws auth login`)
-- `LINEAR_API_KEY` environment variable set with a personal API key that has **Create issues** permission
+- `gws` CLI installed and authenticated (`gws auth login`)
+- `LINEAR_API_KEY` stored in `~/.agents/.env`
 - Python 3.10+ with `requests` and `python-dotenv` packages installed
 
 ## Helper Scripts
 
-The `scripts/` subfolder contains Python scripts that handle JSON parsing, base64 decoding, and Linear API calls. **Always use these scripts** instead of inline Python or PowerShell for these operations — they avoid shell escaping issues (e.g. PowerShell mangling `$input` in GraphQL queries).
+The `scripts/` subfolder contains Python scripts that handle API calls, CLI invocation, and JSON parsing. **Always use these scripts** instead of inline shell commands to avoid quoting and character set encoding issues on Windows.
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/get_linear_team.py` | Query Linear for a team by key, return its UUID |
-| `scripts/parse_email.py` | Parse Gmail full-format JSON, extract headers + decoded body |
-| `scripts/create_linear_issue.py` | Create a Linear issue via GraphQL, return identifier + URL |
-
-All scripts load `LINEAR_API_KEY` from `~/.agents/.env` automatically via `python-dotenv`.
+| `scripts/preflight.py` | Verify environment, dependencies, CLI auth, and Linear connection before running. |
+| `scripts/gws_call.py` | Execute standard Gmail/GWS CLI commands bypass-shell with list arguments. |
+| `scripts/get_linear_team.py` | Query Linear for a team by key, return its UUID. |
+| `scripts/parse_email.py` | Parse Gmail full-format JSON, extract headers + decoded body. |
+| `scripts/create_linear_issue.py` | Create a Linear issue via GraphQL, return identifier + URL. |
 
 Script base path:
 ```
 C:\Users\Reid\.agents\skills\gmail-to-linear-tasks\scripts
 ```
 
-## Step 1 — Discover the REI Team ID
+## Step 1 — Run Preflight Checks
+
+Before processing emails, run the preflight script:
+
+```powershell
+$scriptDir = "C:\Users\Reid\.agents\skills\gmail-to-linear-tasks\scripts"
+python "$scriptDir\preflight.py"
+```
+
+Verify that the output displays `"success": true`. If it does not, report the specific errors (e.g. CLI auth missing, key not set) and stop.
+
+## Step 2 — Discover the REI Team ID
 
 Use the helper script to query Linear for the team with key `REI`:
 
 ```powershell
-$scriptDir = "C:\Users\Reid\.agents\skills\gmail-to-linear-tasks\scripts"
 $teamResult = python "$scriptDir\get_linear_team.py" --key REI | ConvertFrom-Json
 $teamId = $teamResult.teamId
 ```
 
 If `$teamResult.success` is `$false`, report the error (including available teams) and stop. Do not guess a team ID.
 
-## Step 2 — List Today's Unread Inbox Messages
+## Step 3 — List Today's Unread Inbox Messages
 
-Use a broad recent query, then filter by local date (same pattern as `gmail-reply-soon-triage`):
+Use the `gws_call.py` script to list recent unread messages:
 
 ```powershell
 $query = "in:inbox is:unread newer_than:2d -label:Linear-Issue-Created"
-gws gmail users messages list --params "{\"userId\":\"me\",\"q\":\"$query\",\"maxResults\":500}" --format json
+$listResult = python "$scriptDir\gws_call.py" list-unread --query "$query" --max-results 500 | ConvertFrom-Json
 ```
 
-If the result has no `messages`, report that there are no unread Inbox messages from today and stop.
+Verify `$listResult.success` is `$true` and extract `$listResult.data.messages`. If there are no messages, report that there are no unread Inbox messages and stop.
 
-## Step 3 — Filter to Today's Local Date
+## Step 4 — Filter to Today's Local Date
 
-For each listed message ID, fetch metadata:
+For each listed message ID, fetch metadata via `gws_call.py`:
 
 ```powershell
-gws gmail users messages get --params "{\"userId\":\"me\",\"id\":\"MESSAGE_ID\",\"format\":\"metadata\"}" --format json
+$metaResult = python "$scriptDir\gws_call.py" get-meta --id "MESSAGE_ID" | ConvertFrom-Json
+$message = $metaResult.data
 ```
 
 Convert `internalDate` to local time and skip unless the local date equals today:
@@ -79,21 +90,22 @@ $receivedLocal = [DateTimeOffset]::FromUnixTimeMilliseconds([int64]$message.inte
 $receivedLocal.Date -eq (Get-Date).Date
 ```
 
-Also skip any message whose `labelIds` already contains the `Linear Issue Created` label ID (belt-and-suspenders with the query filter).
+Also skip any message whose `labelIds` already contains the `Linear Issue Created` label name or ID (e.g. `Label_95` or `Linear Issue Created`).
 
-## Step 4 — Read Full Message Content
+## Step 5 — Read Full Message Content
 
-For messages that pass the date filter, fetch the full body and save to a temp file, then parse with the helper script:
+For messages that pass the date filter, fetch the full body via `gws_call.py` and write to a temp file, then parse with the helper script:
 
 ```powershell
-gws gmail users messages get --params "{\"userId\":\"me\",\"id\":\"MESSAGE_ID\",\"format\":\"full\"}" --format json | Out-File -FilePath "$env:TEMP\gmail_msg.json" -Encoding utf8
+$fullResult = python "$scriptDir\gws_call.py" get-full --id "MESSAGE_ID" | ConvertFrom-Json
+$fullResult.data | ConvertTo-Json -Depth 10 | Out-File -FilePath "$env:TEMP\gmail_msg.json" -Encoding utf8
 
 $parsed = python "$scriptDir\parse_email.py" "$env:TEMP\gmail_msg.json" | ConvertFrom-Json
 ```
 
 The script returns a JSON object with: `from`, `to`, `subject`, `date`, `threadId`, `messageId`, `body` (plain text, base64 decoded).
 
-## Step 5 — Classify the Email
+## Step 6 — Classify the Email
 
 Analyze the email content. An email qualifies if it contains **at least one** of:
 
@@ -118,25 +130,23 @@ Analyze the email content. An email qualifies if it contains **at least one** of
 
 When unsure, **skip the message**. Err on the side of fewer false positives.
 
-## Step 6 — Ensure the Gmail Label Exists
+## Step 7 — Ensure the Gmail Label Exists
 
-List labels and find `Linear Issue Created`:
+List labels via `gws_call.py` and find `Linear Issue Created`:
 
 ```powershell
-gws gmail users labels list --params '{"userId":"me"}' --format json
+$labelsResult = python "$scriptDir\gws_call.py" list-labels | ConvertFrom-Json
+$labelId = ($labelsResult.data.labels | Where-Object { $_.name -eq "Linear Issue Created" }).id
 ```
-
-Find the label with `name` exactly equal to `Linear Issue Created` and use its `id`.
 
 If the label does not exist, create it:
 
 ```powershell
-gws gmail users labels create --params '{"userId":"me"}' --json '{"name":"Linear Issue Created","labelListVisibility":"labelShow","messageListVisibility":"show"}' --format json
+$newLabelResult = python "$scriptDir\gws_call.py" create-label --name "Linear Issue Created" | ConvertFrom-Json
+$labelId = $newLabelResult.data.id
 ```
 
-Use the returned label `id`.
-
-## Step 7 — Create Linear Issue
+## Step 8 — Create Linear Issue
 
 For each qualifying email, construct the issue:
 
@@ -185,35 +195,34 @@ $issueResult = python "$scriptDir\create_linear_issue.py" --team-id $teamId --ti
 
 Verify `$issueResult.success` is `$true`. Capture `$issueResult.identifier` (e.g., `REI-42`) and `$issueResult.url` for the report. If `success` is `$false`, log `$issueResult.error`, skip labeling this message, and continue.
 
-## Step 8 — Label the Gmail Message
+## Step 9 — Label the Gmail Message
 
-After successfully creating the Linear issue, apply the label:
+After successfully creating the Linear issue, apply the label via `gws_call.py`:
 
 ```powershell
-$body = @{
-  ids = @("MESSAGE_ID")
-  addLabelIds = @("LINEAR_ISSUE_CREATED_LABEL_ID")
-} | ConvertTo-Json -Compress
-
-gws gmail users messages batchModify --params '{"userId":"me"}' --json $body --format json
+python "$scriptDir\gws_call.py" label-message --label-id $labelId --message-ids "MESSAGE_ID"
 ```
 
-Batch multiple message IDs together if processing several emails.
+## Step 10 — Document Execution Gotchas
 
-## Step 9 — Final Report
+If you ran into any runtime errors, platform bugs, syntax errors, or had to execute a workaround to complete this task (e.g. modifying helper scripts or fixing character set decodes), you **must** immediately document them with their solutions/workarounds in `./gotchas/GOTCHAS.md` before generating the final report.
+
+## Step 11 — Final Report
 
 Keep the response short and private:
 
-- How many today's unread Inbox messages were scanned
-- How many Linear issues were created
+- Confirm how many today's unread Inbox messages were scanned
+- Confirm how many Linear issues were created
 - For each issue: the Linear issue identifier (e.g., `REI-42`), a one-line summary, and the Linear URL
-- How many messages were skipped (and brief reason categories)
-- Any errors
+- Confirm how many messages were skipped (and brief reason categories)
+- Summarize any newly logged issues added to `./gotchas/GOTCHAS.md`
+- List any errors encountered
 
 Do **not** include full email bodies or sensitive content in the report. Summarize only.
 
 ## Error Handling
 
+- **Gotcha Logging:** If any API, shell command, or script execution fails or requires a workaround, you must document the problem and solution in `./gotchas/GOTCHAS.md` **before** completing the final report.
 - If `LINEAR_API_KEY` is not set, report the error and stop immediately.
 - If the REI team is not found, report available teams and stop.
 - If a single issue creation fails, log the error, skip that email (do not label it), and continue with remaining emails.
@@ -223,8 +232,5 @@ Do **not** include full email bodies or sensitive content in the report. Summari
 
 - **Never** output the `LINEAR_API_KEY` value.
 - **Never** display full email bodies in the final report.
-- Confirm `LINEAR_API_KEY` is set before making any API calls.
+- Confirm `LINEAR_API_KEY` is set in the environment or env file before making any API calls.
 - All Linear API calls use `Authorization: $env:LINEAR_API_KEY` header.
-
-## Capturing Gotchas
-Any errors, mistakes, and difficulties in executing this skill to a high level of quality and user satisfaction, write what the problem was to `./gotchas/GOTCHAS.md`. These will be used to improve this skill.
